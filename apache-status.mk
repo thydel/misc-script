@@ -59,7 +59,7 @@ help:
 	@echo '# server status is filtered to keep only "Sending Reply" workers'
 	@echo '# only IP, vhost and Request path are kept'
 	@echo '# after loop on server-status, IPs, vhosts and URLs are sorted and counted'
-	@echo '# output files are wroten in $(dir), created if missing'
+	@echo '# output files are written in $(dir), created if missing'
 
 .PHONY: help
 .DEFAULT_GOAL := help

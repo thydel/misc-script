@@ -10,7 +10,7 @@ name    := $(notdir $($(self)))
 $(self):;
 
 staff := staff
-$(if $(shell getent group $(staff) | grep -q $(USER) || date),$(error $(USER) not in group $(staff)))
+$(if $(shell getent group $(staff) | grep -q $(USER) || test $(USER) = root || date),$(error $(USER) not in group $(staff)))
 
 b := /space/remote_logs
 

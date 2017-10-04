@@ -34,4 +34,4 @@ def select_attr:
       + (.capabilities | keys[] | select(startswith("10")) | { (.): $cap[.] });
 
 "net ARP",
-(select_attr | @text "\(.logicalname) \(.serial)")
+([select_attr | @text "\(.logicalname) \(.serial)"] | sort | .[])

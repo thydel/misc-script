@@ -20,7 +20,8 @@ m := $(shell date -d '$n days ago' +%m)
 d := $(shell date -d '$n days ago' +%d)
 p := [a-z]*/$y/$m/$d
 
-find  := (cd $b; find $p -maxdepth 0 -type d | sort)
+test  := [ "$$(echo $p)" != "$p" ]
+find  := (cd $b; $(test) && find $p -maxdepth 0 -type d | sort)
 tgz   := $(find) | xargs -i echo tar czf $b/{}.tgz -C $b {}
 clean := $(find) | xargs -i echo test -s $b/{}.tgz -a -d $b/{} '&&' rm -r $b/{}
 

@@ -9,6 +9,8 @@ $(self) := $(basename $(self))
 name    := $(notdir $($(self)))
 $(self):;
 
+USER ?= unknown
+
 staff := staff
 $(if $(shell getent group $(staff) | grep -q $(USER) || test $(USER) = root || date),$(error $(USER) not in group $(staff)))
 

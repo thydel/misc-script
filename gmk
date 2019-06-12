@@ -7,16 +7,18 @@ SHELL != which bash
 
 tmp := .gmk
 self := $(lastword $(MAKEFILE_LIST))
-$(self): $(tmp)/gmk.mk;
+file ?= gmk
+$(self): $(tmp)/$(file).mk;
 
-include $(tmp)/gmk.mk
+include $(tmp)/$(file).mk
 
 dirs := $(tmp)
 stones := $(dirs:%=%/.stone)
 $(self): $(stones)
 %/.stone:; mkdir -p $(@D); touch $@
 
-main: $(repos)
+versions := $(repos:%=%/version)
+main: $(versions)
 
 indent := 2
 yaml2json.py := import sys, yaml, json;
@@ -25,7 +27,7 @@ yaml2json_py := python -c '$(yaml2json.py)'
 
 yml2js := python -c '$(yaml2json.py)'
 
-$(tmp)/gmk.js: gmk.yml; < $< $(yml2js) > $@
+$(tmp)/$(file).js: $(file).yml; < $< $(yml2js) > $@
 
 js2mk.jq := .[]
 js2mk.jq += | select(.name)
@@ -36,12 +38,19 @@ js2mk.jq += | join("\n")
 
 js2mk := jq -r '$(js2mk.jq)'
 
-$(tmp)/gmk.mk: $(tmp)/gmk.js; < $< $(js2mk) > $@
+$(tmp)/$(file).mk: $(tmp)/$(file).js; < $< $(js2mk) > $@
+
+clone = GIT_SSH_COMMAND="ssh -i ~/.ssh/$($1.key)" git clone -b $($1.version) $($1.src) $$@
 
 define repo
-$($1.dir)/$1:; GIT_SSH_COMMAND="ssh -i ~/.ssh/$($1.key)" git clone $($1.src) $$@
-$1: $($1.dir)/$1
+$(eval dir := $($1.dir)/$1)
+$(eval $1.head != git -C $(dir) rev-parse --abbrev-ref HEAD)
+$(dir):; $(clone)
+$1: $(dir)
 .PHONY: $1
+$1/version: $$(shell test $($1.head) == $($1.version) || echo $1/checkout)
 endef
+
+%/checkout:; git -C $($*.dir)/$* checkout $($*.version)
 
 $(foreach _, $(repos), $(eval $(call repo,$_)))

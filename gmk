@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+MAKEFLAGS += -Rr
+SHELL != which bash
+.DEFAULT_GOAL := main
+.PHONY: main
+
+self := $(lastword $(MAKEFILE_LIST))
+$(self):;
+
+tmp := .gmk
+dirs := $(tmp)
+stones := $(dirs:%=%/.stone)
+$(self): $(stones)
+%/.stone:; mkdir -p $(@D); touch $@
+
+main: $(tmp)/gmk.mk
+
+indent := 2
+yaml2json.py := import sys, yaml, json;
+yaml2json.py += json.dump(yaml.load(sys.stdin), sys.stdout, indent=$(indent), default=str, sort_keys=True)
+yaml2json_py := python -c '$(yaml2json.py)'
+
+yml2js := python -c '$(yaml2json.py)'
+
+$(tmp)/gmk.js: gmk.yml; < $< $(yml2js) > $@
+
+js2mk.jq := .[]
+js2mk.jq += | select(.name)
+js2mk.jq += | . as $$a | to_entries
+js2mk.jq += | map($$a.name + "." + .key + " := " + .value)
+js2mk.jq += | . += [ "repos += " + $$a.name ]
+js2mk.jq += | join("\n")
+
+js2mk := jq -r '$(js2mk.jq)'
+
+$(tmp)/gmk.mk: $(tmp)/gmk.js; < $< $(js2mk) > $@

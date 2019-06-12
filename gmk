@@ -5,16 +5,18 @@ SHELL != which bash
 .DEFAULT_GOAL := main
 .PHONY: main
 
-self := $(lastword $(MAKEFILE_LIST))
-$(self):;
-
 tmp := .gmk
+self := $(lastword $(MAKEFILE_LIST))
+$(self): $(tmp)/gmk.mk;
+
+include $(tmp)/gmk.mk
+
 dirs := $(tmp)
 stones := $(dirs:%=%/.stone)
 $(self): $(stones)
 %/.stone:; mkdir -p $(@D); touch $@
 
-main: $(tmp)/gmk.mk
+main: $(repos)
 
 indent := 2
 yaml2json.py := import sys, yaml, json;
@@ -35,3 +37,11 @@ js2mk.jq += | join("\n")
 js2mk := jq -r '$(js2mk.jq)'
 
 $(tmp)/gmk.mk: $(tmp)/gmk.js; < $< $(js2mk) > $@
+
+define repo
+$($1.dir)/$1:; GIT_SSH_COMMAND="ssh -i ~/.ssh/$($1.key)" git clone $($1.src) $$@
+$1: $($1.dir)/$1
+.PHONY: $1
+endef
+
+$(foreach _, $(repos), $(eval $(call repo,$_)))

@@ -18,16 +18,22 @@ $(self): $(stones)
 %/.stone:; mkdir -p $(@D); touch $@
 
 versions := $(repos:%=%/version)
-main: $(versions)
+statuses := $(repos:%=%/status)
+pulls := $(repos:%=%/pull)
+clone: $(repos)
+version: $(versions)
+status: $(statuses)
+pull: $(pulls)
+.PHONY: clone version status pull
 
-indent := 2
-yaml2json.py := import sys, yaml, json;
-yaml2json.py += json.dump(yaml.load(sys.stdin), sys.stdout, indent=$(indent), default=str, sort_keys=True)
-yaml2json_py := python -c '$(yaml2json.py)'
+main: clone version
 
-yml2js := python -c '$(yaml2json.py)'
+yml2js.py := import sys, yaml, json;
+yml2js.py += json.dump(yaml.load(sys.stdin), sys.stdout, indent=2, default=str, sort_keys=True)
 
-$(tmp)/$(file).js: $(file).yml; < $< $(yml2js) > $@
+yml2js := python -c '$(yml2js.py)'
+
+$(tmp)/$(file).js: $(file).yml; @ < $< $(yml2js) > $@
 
 js2mk.jq := .[]
 js2mk.jq += | select(.name)
@@ -38,7 +44,7 @@ js2mk.jq += | join("\n")
 
 js2mk := jq -r '$(js2mk.jq)'
 
-$(tmp)/$(file).mk: $(tmp)/$(file).js; < $< $(js2mk) > $@
+$(tmp)/$(file).mk: $(tmp)/$(file).js; @ < $< $(js2mk) > $@
 
 clone = GIT_SSH_COMMAND="ssh -i ~/.ssh/$($1.key)" git clone -b $($1.version) $($1.src) $$@
 
@@ -51,6 +57,7 @@ $1: $(dir)
 $1/version: $$(shell test $($1.head) == $($1.version) || echo $1/checkout)
 endef
 
-%/checkout:; git -C $($*.dir)/$* checkout $($*.version)
+checkout = checkout $($*.version)
+%/checkout %/status %/pull:; git -C $($*.dir)/$* $(or $($(@F)),$(@F))
 
 $(foreach _, $(repos), $(eval $(call repo,$_)))

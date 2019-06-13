@@ -14,19 +14,19 @@ include $(tmp)/$(file).mk
 
 dirs := $(tmp)
 stones := $(dirs:%=%/.stone)
-$(self): $(stones)
+$(self): $(stones) $(adam)
 %/.stone:; mkdir -p $(@D); touch $@
 
-versions := $(repos:%=%/version)
-statuses := $(repos:%=%/status)
-pulls := $(repos:%=%/pull)
-clone: $(repos)
-version: $(versions)
-status: $(statuses)
-pull: $(pulls)
-.PHONY: clone version status pull
+actions := clone ssh conf sync status pull
+define action
+$(eval action.$1 := $(repos:%=%/$1))
+$1: $(action.$1)
+endef
+$(foreach _, $(actions), $(eval $(call action,$_)))
+.PHONY: $(actions)
 
-main: clone version
+init: ssh; $(self) --no-print-directory conf
+main: sync
 
 yml2js.py := import sys, yaml, json;
 yml2js.py += json.dump(yaml.load(sys.stdin), sys.stdout, indent=2, default=str, sort_keys=True)
@@ -46,16 +46,23 @@ js2mk := jq -r '$(js2mk.jq)'
 
 $(tmp)/$(file).mk: $(tmp)/$(file).js; @ < $< $(js2mk) > $@
 
-clone = GIT_SSH_COMMAND="ssh -i ~/.ssh/$($1.key)" git clone -b $($1.version) $($1.src) $$@
-
+ssh = ssh -i ~/.ssh/$($1.key) -F /dev/null
+clone.cmd = GIT_SSH_COMMAND="$(ssh)" git clone -b $($1.version) $($1.src) $$@
 define repo
 $(eval dir := $($1.dir)/$1)
-$(eval $1.head != git -C $(dir) rev-parse --abbrev-ref HEAD)
-$(dir):; $(clone)
+$(eval $1.head != test -d $(dir) && git -C $(dir) rev-parse --abbrev-ref HEAD)
+$(dir):; $(clone.cmd)
 $1: $(dir)
 .PHONY: $1
-$1/version: $$(shell test $($1.head) == $($1.version) || echo $1/checkout)
+$1/clone: $1
+$1/ssh: $1 $$(shell test -d $(dir) && git -C $(dir) config --get --local core.sshCommand > /dev/null || echo $1/do.ssh)
+$1/conf: $1/ssh $$(shell test -d $(dir) && git -C $(dir) config --get --local user.email > /dev/null || echo $1/do.conf)
+$1/sync: $1/conf $$(shell test "$($1.head)" == $($1.version) || echo $1/checkout)
 endef
+
+do.conf = $(foreach _, $($*.config), git -C $($*.dir)/$* config --add $_ "$$(git config --get --local $_)";)
+do.ssh = git -C $($*.dir)/$* config --add core.sshCommand "$(call ssh,$*)"
+%/do.conf %/do.ssh:; $($(@F))
 
 checkout = checkout $($*.version)
 %/checkout %/status %/pull:; git -C $($*.dir)/$* $(or $($(@F)),$(@F))

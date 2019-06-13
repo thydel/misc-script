@@ -5,17 +5,34 @@ SHELL != which bash
 .DEFAULT_GOAL := main
 .PHONY: main
 
+git.test := git rev-parse --is-inside-work-tree > /dev/null 2>&1 || date
+. := $(and $(shell $(git.test)),$(error not in a git dir))
+git.dir != git rev-parse --git-dir
+git.exclude := $(git.dir)/info/exclude
+
 tmp := .gmk
 self := $(lastword $(MAKEFILE_LIST))
 file ?= gmk
-$(self): $(tmp)/$(file).mk;
 
-include $(tmp)/$(file).mk
+adam := $(tmp)/.adam
+ultimo := /proc/self
+$(ultimo):;
+$(adam):; touch -d @0 $@
+old-or-young := && echo $(adam) || echo $(ultimo)
+lineinfile = $(eval $2:: $(shell grep -q '$1' $2 $(old-or-young)); echo '$1' >> $$@)
 
 dirs := $(tmp)
 stones := $(dirs:%=%/.stone)
-$(self): $(stones) $(adam)
+mailmap := .mailmap
+$(self): $(stones) $(adam) do-mailmap
 %/.stone:; mkdir -p $(@D); touch $@
+do-mailmap: $(shell test -f $(mailmap) || touch $(mailmap))
+.PHONY: do-mailmap
+$(call lineinfile,$(tmp),$(git.exclude))
+$(call lineinfile,$(mailmap),$(git.exclude))
+
+$(self): $(tmp)/$(file).mk;
+include $(tmp)/$(file).mk
 
 actions := clone ssh conf sync status pull
 define action
@@ -25,7 +42,7 @@ endef
 $(foreach _, $(actions), $(eval $(call action,$_)))
 .PHONY: $(actions)
 
-init: ssh; $(self) --no-print-directory conf
+init: ssh exclude; $(self) --no-print-directory conf mailmap
 main: sync
 
 yml2js.py := import sys, yaml, json;
@@ -33,7 +50,7 @@ yml2js.py += json.dump(yaml.load(sys.stdin), sys.stdout, indent=2, default=str, 
 
 yml2js := python -c '$(yml2js.py)'
 
-$(tmp)/$(file).js: $(file).yml; @ < $< $(yml2js) > $@
+$(tmp)/$(file).js: $(file).yml $(stones); @ < $< $(yml2js) > $@
 
 js2mk.jq := .[]
 js2mk.jq += | select(.name)
@@ -68,3 +85,19 @@ checkout = checkout $($*.version)
 %/checkout %/status %/pull:; git -C $($*.dir)/$* $(or $($(@F)),$(@F))
 
 $(foreach _, $(repos), $(eval $(call repo,$_)))
+
+$(foreach _, $(repos), $(call lineinfile,$($_.dir)/$_/,$(git.exclude)))
+exclude: $(git.exclude)
+
+ifeq ($(USER),thy)
+thyepi := <t.delamare@epiconcept.fr> Thierry Delamare
+thydel := <t.delamare@laposte.net>   Thierry Delamare
+cedric := <c.girard@epiconcept.fr>   Cédric Girard
+evens  := <e.solignac@epiconcept.fr> Evens Solignac
+committers := thyepi thydel cedric evens
+$(foreach _, $(committers), $(call lineinfile,$_ $($_),$(mailmap)))
+endif
+mailmap: $(mailmap)
+.PHONY: mailmap
+
+help:; @echo WIP

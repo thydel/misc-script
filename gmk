@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-MAKEFLAGS += -Rr
+MAKEFLAGS += -Rr --warn-undefined-variables
 SHELL != which bash
 .DEFAULT_GOAL := main
 .PHONY: main
@@ -53,6 +53,7 @@ yml2js := python -c '$(yml2js.py)'
 $(tmp)/$(file).js: $(file).yml $(stones); @ < $< $(yml2js) > $@
 
 js2mk.jq := .[]
+js2mk.jq += | select(! .hide)
 js2mk.jq += | select(.name)
 js2mk.jq += | . as $$a | to_entries
 js2mk.jq += | map($$a.name + "." + .key + " := " + .value)
@@ -66,11 +67,11 @@ $(tmp)/$(file).mk: $(tmp)/$(file).js; @ < $< $(js2mk) > $@
 ssh = ssh -i ~/.ssh/$($1.key) -F /dev/null
 clone.cmd = GIT_SSH_COMMAND="$(ssh)" git clone -b $($1.version) $($1.src) $$@
 define repo
-$(eval dir := $($1.dir)/$1)
+$(eval dir := $(if $($1.dir),$($1.dir)/$1,$1))
 $(eval $1.head != test -d $(dir) && git -C $(dir) rev-parse --abbrev-ref HEAD)
 $(dir):; $(clone.cmd)
-$1: $(dir)
-.PHONY: $1
+$(if $($1.dir),$1: $(dir))
+$(if $($1.dir),.PHONY: $1)
 $1/clone: $1
 $1/ssh: $1 $$(shell test -d $(dir) && git -C $(dir) config --get --local core.sshCommand > /dev/null || echo $1/do.ssh)
 $1/conf: $1/ssh $$(shell test -d $(dir) && git -C $(dir) config --get --local user.email > /dev/null || echo $1/do.conf)
@@ -79,11 +80,13 @@ endef
 
 do.conf = $(foreach _, $($*.config), git -C $($*.dir)/$* config --add $_ "$$(git config --get --local $_)";)
 do.ssh = git -C $($*.dir)/$* config --add core.sshCommand "$(call ssh,$*)"
+%/do.conf %/do.ssh: dir = $(if $($*.dir),$($*.dir)/$*,$*)
 %/do.conf %/do.ssh:; $($(@F))
 
 checkout = checkout $($*.version)
 %/checkout %/status %/pull:; git -C $($*.dir)/$* $(or $($(@F)),$(@F))
 
+$(if $(show),$(foreach _, $(repos), $(warning $(call repo,$_))))
 $(foreach _, $(repos), $(eval $(call repo,$_)))
 
 $(foreach _, $(repos), $(call lineinfile,$($_.dir)/$_/,$(git.exclude)))

@@ -13,7 +13,7 @@ list_all () { find -maxdepth 1 -name '*.jpg' | input > $p; }
 
 mpeg () {
     . <(args p r s m)
-    ffmpeg -y -r ${r:=24} -f concat -safe 0 -i ./$p -s ${s:=1280x960} -vcodec libx264 ${m:=out}-$(date +%y-%m-%d-%H-%M)-$s-$r.mp4
+    ffmpeg -y -r ${r:=24} -f concat -safe 0 -i ./$p -s ${s:=1280x960} -vcodec libx264 ${m:=out}-$(today)_$(date +%y-%m-%d-%H-%M)-$s-$r.mp4
 }
 
 mov_range () {
@@ -58,11 +58,16 @@ hide () { find-range | awk NR%2 | xargs mv -t .hide; }
 ################
 
 jpgs | xargs jpegoptim -pv
+init
 add-next-first
-time-all; stones 00:00 06:00; hide; time-all
-time-range; time-hiden
+time-all; stones 00:00 06:30; hide; time-all
+time-all; stones 00:00 06:30; hide; time-all
+time-all; stones 00:00 06:30; hide; time-all
+time-all; time-range; time-hiden
 time-all; stones 20:20 23:59; hide; time-all
-time-range; time-hiden
+time-all; stones 20:20 23:59; hide; time-all
+time-all; stones 20:20 23:59; hide; time-all
+time-all; time-range; time-hiden
 all
 
 ################

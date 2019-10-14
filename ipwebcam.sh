@@ -2,6 +2,8 @@
 # https://linux-actif.fr/timelapse
 # https://ubuntuforums.org/showthread.php?t=2022316
 
+# https://www.ostechnix.com/20-ffmpeg-commands-beginners/
+
 args () { paste <(echo $@ | xargs -n1) <(seq $#) | awk '{ print "local " $1 "=$" $2 }'; }
 pipe () { test -p $1 || mknod $1 p; }
 input () { cut -d/ -f2 | sort | xargs -i echo file {}; }
@@ -54,6 +56,8 @@ time-range () { find-range | t; }
 time-hiden () { find .hide -name '*.jpg' | t; }
 time-shorten () { find-range | awk NR%2 | t; }
 hide () { find-range | awk NR%2 | xargs mv -t .hide; }
+
+tag () { ffmpeg -i $1.mp4 -c copy -map 0 -metadata creation_time="$(today)T12:00:00.0Z" $1-t.mp4; }
 
 ################
 

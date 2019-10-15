@@ -64,8 +64,8 @@ tag () { ffmpeg -i $1.mp4 -c copy -map 0 -metadata creation_time="$(today)T12:00
 paris () { echo 48.8566N 2.3522E; }
 sun () { sunwait list $1 $(paris); }
 now () { date +%s; }
-before () { date -d "$(sun rise) 15 minutes ago" +%s; }
-after () { date -d "$(sun set) 15 minutes" +%s; }
+before () { date -d "$(sun rise) 30 minutes ago" +%s; }
+after () { date -d "$(sun set) 30 minutes" +%s; }
 pause () { if test $(now) -lt $(before) -o $(now) -gt $(after); then echo 60; else echo 10; fi; }
 
 url () { echo https://manin/shot.jpg; }

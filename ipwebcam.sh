@@ -13,9 +13,14 @@ list_all () { find -maxdepth 1 -name '*.jpg' | input > $p; }
 # -pix_fmt yuvj422p
 # -pix_fmt yuv420p
 
-mpeg () {
+mpeg2 () {
     . <(args p r s m)
     ffmpeg -y -r ${r:=24} -f concat -safe 0 -i ./$p -s ${s:=1280x960} -vcodec libx264 ${m:=out}-$(today)_$(date +%y-%m-%d-%H-%M)-$s-$r.mp4
+}
+
+mpeg () {
+    . <(args p r s m)
+    ffmpeg -y -r ${r:=24} -f concat -safe 0 -i ./$p -s ${s:=640x480} -vcodec libx264 ${m:=out}-$(today)_$(date +%y-%m-%d-%H-%M)-$s-$r.mp4
 }
 
 mov_range () {
@@ -31,7 +36,15 @@ mov_all () {
 range () { mov_range p=list f=$first l=$last m=$out; }
 all () { mov_all r=$1 s=$2 p=list m=$out; }
 
-interpolate () { ffmpeg -i $1.mp4 -filter minterpolate $1-i.mp4; }
+interpolate_ () { ffmpeg -i $1.mp4 -filter minterpolate $1-i.mp4; }
+today () { echo $(basename $(pwd)); }
+last () { ls out*[0-9].mp4 | tail -1; }
+base () { echo out-$(today); }
+link () { ln -f $(last) $(base)-b.mp4; }
+interpolate () {
+    local ftp pts file; local "$@"; f=$(base);
+    ffmpeg -i ${file:=$f}-b.mp4 -filter "minterpolate='fps=${fps:=48}',setpts=${pts:=1}*PTS" ${file=:$f}-i.mp4;
+}
 
 ################
 
@@ -75,7 +88,7 @@ end () { pgrep sleep | xargs ps -ho ppid | xargs kill; }
 
 ################
 
-jpgs | xargs jpegoptim -pv
+jpgs | xargs jpegoptim -pvm95
 init
 add-next-first
 time-all; stones 00:00 06:30; hide; time-all
@@ -87,5 +100,7 @@ time-all; stones 20:20 23:59; hide; time-all
 time-all; stones 20:20 23:59; hide; time-all
 time-all; time-range; time-hiden
 all
+
+mpvx () { mpv -vo=xv $1; }
 
 ################

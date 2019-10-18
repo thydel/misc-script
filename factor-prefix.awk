@@ -1,6 +1,7 @@
 #!/usr/bin/gawk -f
 
 BEGIN {
+    m = (filter == "" ? "." : filter);
     o = " ";
     s = " ";
     c = "";
@@ -27,16 +28,17 @@ function prt() {
     printf c "\n"
 }
 
-NR == 1 { nxt() }
+$1 ~ m && NR == 1 { nxt() }
 
-$1 == p1 { n[i++] = p2; p2 = $2 }
+$1 ~ m && $1 == p1 { n[i++] = p2; p2 = $2 }
 
-$1 != p1 && !i { print p1 " " p2; nxt() }
+($1 !~ m || $1 ~ m && $1 != p1) && !i { print p1 " " p2; nxt() }
 
-$1 != p1 {
+$1 !~ m || $1 ~ m && $1 != p1 {
     n[i++] = p2;
     prt()
     nxt()
 }
+
 
 END { if (!i) { print p1 " " p2 } else { n[i++] = p2; prt() } }

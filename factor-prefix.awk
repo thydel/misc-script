@@ -14,8 +14,16 @@ BEGIN {
 function nxt() { i = 0; p1 = $1; p2 = $2; next }
 
 function prt() {
-    printf p1 o n[0];
-    for (j = 1; j < i; ++j) { printf s n[j] }
+    if (squeeze == 1) {
+	if (i > 1) {
+	    printf p1 o n[i - 1];
+	} else {
+	    printf p1 o n[0];
+	}
+    } else {
+	printf p1 o n[0];
+	for (j = 1; j < i; ++j) { printf s n[j] }
+    }
     printf c "\n"
 }
 

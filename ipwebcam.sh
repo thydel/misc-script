@@ -55,7 +55,7 @@ add-next-first () { next-firsts $1 | xargs ln -fst .; }
 point () { echo $(today)T${1}:00; }
 
 init () { mkdir -p .stone .hide; }
-stone () { touch -d $2 .stone/$1; }
+stone () { touch -d "$2" .stone/$1; }
 stones () { stone start $(point $1); stone end $(point $2); }
 start () { echo .stone/start; }
 end () { echo .stone/end; }
@@ -81,26 +81,40 @@ before () { date -d "$(sun rise) 30 minutes ago" +%s; }
 after () { date -d "$(sun set) 30 minutes" +%s; }
 pause () { if test $(now) -lt $(before) -o $(now) -gt $(after); then echo 60; else echo 10; fi; }
 
+the-day-file () { ls *.jpg | head -1; }
+the-day-sunwait () { the-day-file | xargs -i date -r {} +'d %d m %m y %y'; }
+the-day-sun () { sunwait list $1 $(the-day-sunwait); }
+the-day-start () { the-day-file | xargs -i date -r {} +%F; }
+the-day-end () { date -d "$(the-day-start) + 1 day - 1 second" +%s; }
+the-day-rise () { date +%s -d "$(date -d $(the-day-start)T$(the-day-sun rise)) - 1 hour"; }
+the-day-set ()  { date +%s -d "$(date -d $(the-day-start)T$(the-day-sun set))  + 1 hour"; }
+
+stones-rise () { stone start "$(the-day-start)"; stone end @$(the-day-rise); }
+stones-set  () { stone start @$(the-day-set); stone end @$(the-day-end); }
+
 url () { echo https://manin/shot.jpg; }
-get () { wget -q --no-check-certificate --user=manin --password="$(pass ipcam/nexus4)" $(url) -O $(date +%FT%T).jpg; }
+geto () { wget -q --no-check-certificate --user=manin --password="$(pass ipcam/nexus4)" $(url) -O $(date +%FT%T).jpg; }
+export ipcam_nexus4=$(pass ipcam/nexus4)
+get () { wget -q --no-check-certificate --user=manin --password="$ipcam_nexus4" $(url) -O $(date +%FT%T).jpg; }
 loop () { while true; do get; sleep $(pause); done; }
-end () { pgrep sleep | xargs ps -ho ppid | xargs kill; }
+endloop () { pgrep sleep | xargs ps -ho ppid | xargs kill; }
+
+mpvx () { mpv -vo=xv $1; }
 
 ################
 
+jpegoptim -pvm95 *.jpg
 jpgs | xargs jpegoptim -pvm95
-init
-add-next-first
-time-all; stones 00:00 06:30; hide; time-all
-time-all; stones 00:00 06:30; hide; time-all
-time-all; stones 00:00 06:30; hide; time-all
-time-all; time-range; time-hiden
-time-all; stones 20:20 23:59; hide; time-all
-time-all; stones 20:20 23:59; hide; time-all
-time-all; stones 20:20 23:59; hide; time-all
-time-all; time-range; time-hiden
+init; add-next-first
+
+stones-rise; hide; hide; hide
+stones-set; hide; hide; hide
+
+#time-all; time-range; time-hiden
+
 all
 
-mpvx () { mpv -vo=xv $1; }
+mpvx $(ls *.mp4 | tail -1)
+
 
 ################

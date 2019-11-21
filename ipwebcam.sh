@@ -116,5 +116,16 @@ all
 
 mpvx $(ls *.mp4 | tail -1)
 
+################
+
+loop() { while read; do eval $@ $REPLY; done; }
+list() { find ${1:?} -type f -name '*.jpg' -mtime +0 | sort; }
+optim() { list $1 | xargs -r jpegoptim -pvm95; }
+move1() { d=$(date +%F -r $2); mkdir -p $1/$d; echo mv $2 $1/$d; }
+move() { list $1 | loop move1 $2; }
+
+cd ~/Downloads/nexus4/shot
+optim .
+move . ~/ipwebcam/shots
 
 ################

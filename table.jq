@@ -10,28 +10,28 @@ def group($group): groups[$group] | unique;
 def net($net): ips[$net].name | unique;
 
 def data:
+  def inter(a; b): Set::intersection(group(a); group(b));
   [
-   [[ "bastion" ], net("admin2"), [ "ssh" ]],
-   [
-    Set::intersection(group("prod"); group("front")),
-    Set::intersection(group("prod"); group("nfs")),
-    [ "NFS" ]
-    ],
-   [
-    Set::intersection(group("prod"); group("front")),
-    Set::intersection(group("prod"); group("nfs")),
-    [ "FOO" ]
-    ]
-   ];
+   [group("bastion"), net("admin2"),    [ "ssh" ]],
+   [net("admin2"),    group("backups"), [ "ssh" ]],
+   [net("admin2"),    group("log"),     [ "log" ]],
 
-def triplet: [. as $in | $in[0][] as $source | $in[1][] as $dest | $in[2][] as $proto | [ $source, $dest, $proto ]];
+   [inter("prod";    "front"), inter("prod";    "nfs"), [ "nfs" ]],
+   [inter("preprod"; "front"), inter("preprod"; "nfs"), [ "nfs" ]]
+  ];
 
-def merge: reduce .[] as $t ({}; . + { ($t[0]): (.[$t[0]] + { ($t[1]): (.[$t[0]][$t[1]] + [$t[2]]) }) });
+def index:
+  def triplet: [. as $in | $in[0][] as $source | $in[1][] as $dest | $in[2][] as $proto | [ $source, $dest, $proto ]];
+  def merge: reduce .[] as $t ({}; . + { ($t[0]): (.[$t[0]] + { ($t[1]): (.[$t[0]][$t[1]] + [$t[2]]) }) });
+  [.[] | triplet] | flatten(1) | merge;
 
-def step1: [data[] | triplet] | flatten(1) | merge;
+def table(lines; cols):
+  def txt: { empty: ".", space: " " };
+  ([ txt.empty ] + cols,
+  lines[] as $line
+  | [ $line ] + [ cols[] as $col | .[$line][$col] // [ txt.empty ] | join(txt.space) ])
+  | @tsv;
 
-group("prod") as $n
-  | step1 as $t
-  | ([ "." ] + $n | @tsv), $n[] as $l | [ $l ] + [ $n[] as $c | $t[$l][$c] // ["."] | join(",") ] | @tsv
-
-#step1
+data | index
+  | table(group("front"); group("nfs")),
+    table(group("prod"); group("admin") + group("backups"))

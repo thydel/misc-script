@@ -30,6 +30,8 @@ def merge: reduce .[] as $t ({}; . + { ($t[0]): (.[$t[0]] + { ($t[1]): (.[$t[0]]
 
 def step1: [data[] | triplet] | flatten(1) | merge;
 
-group("prod") | . as $l | $l[] as $c | [ $c, $l ]
+group("prod") as $n
+  | step1 as $t
+  | ([ "." ] + $n | @tsv), $n[] as $l | [ $l ] + [ $n[] as $c | $t[$l][$c] // ["."] | join(",") ] | @tsv
 
 #step1

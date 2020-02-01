@@ -1,7 +1,7 @@
 #!/usr/local/bin/jq -f
 
 import "Set" as Set;
-import "table" as $data;
+import "flow-matrix-data" as $data;
 
 def ips: $data::data[0][0].list;
 def groups: $data::data[0][1].by_groups;
@@ -25,7 +25,7 @@ def index:
   def merge: reduce .[] as $t ({}; . + { ($t[0]): (.[$t[0]] + { ($t[1]): (.[$t[0]][$t[1]] + [$t[2]]) }) });
   [.[] | triplet] | flatten(1) | merge;
 
-def table(lines; cols):
+def flow_matrix(lines; cols):
   def txt: { empty: ".", space: " " };
   ([ txt.empty ] + cols,
   lines[] as $line
@@ -33,5 +33,5 @@ def table(lines; cols):
   | @tsv;
 
 data | index
-  | table(group("front"); group("nfs")),
-    table(group("prod"); group("admin") + group("backups"))
+  | flow_matrix(group("front"); group("nfs")),
+    flow_matrix(group("prod"); group("admin") + group("backups"))

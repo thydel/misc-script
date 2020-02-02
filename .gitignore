@@ -1,4 +1,5 @@
 *~
 .stone
 .mailmap
-flow-matrix-data.json
+data.json
+flow-matrix.tsv

@@ -1,0 +1,59 @@
+#!/usr/bin/make -f
+
+MAKEFLAGS += -Rr --warn-undefined-variables
+SHELL != which bash
+.SHELLFLAGS := -euo pipefail -c
+
+top:; @date
+
+pattern.presse := "@PresseFr"
+jq.files := .[] | .filename
+jq.mv := "mv \(@sh)"
+ascii.space := " "
+ascii.quote := "\u0027"
+unicode.nbsp := "\u00a0"
+unicode.rsquo := "\u2019"
+
+~ := no-space
+$~: from := $(ascii.space)
+$~: to := $(unicode.nbsp)
+~ := no-quote
+$~: from := $(ascii.quote)
+$~: to := $(unicode.rsquo)
+~ := no-space no-quote
+$~: jq := $(jq.files) | select(test($(from))) | [., sub($(from); $(to); "g")] | $(jq.mv)
+$~:; @jc ls | jq -r '$(jq)'
+.PHONY: $~
+- := $~
+~ := norm
+$~: $-;
+.PHONY: $~
+
+~ := rename
+$~: pattern := $(pattern.presse)
+$~: jq := $(jq.files) | select(test($(pattern))) | [., sub($(pattern); "")] | $(jq.mv)
+$~:; @jc ls | jq -r '$(jq)'
+.PHONY: $~
+
+~ := scan
+$~ned:; mkdir $@
+$~: pattern := "\\.txt$$"
+$~: select := select(.size == 0 and (.filename | test($(pattern)))).filename
+$~: do = if length > 0 then $1 else empty end
+$~: move = map($(select) | sub("txt"; "pdf")) | $(call do, "mv -t $| \(. | @sh)")
+$~: clean := map($(select)) | $(call do, "rm \(. | @sh)")
+$~: files := jc ls -l
+$~: $~  = $(files) | jq -r '$(move)';
+$~: $~ += $(files) | jq -r '$(clean)'
+$~: txts | $~ned; @$($@)
+.PHONY: $~
+
+pdfs := $(wildcard *.pdf)
+txts := $(pdfs:%.pdf=%.txt)
+txts: $(txts)
+.PHONY: txt
+
+%.txt: %.pdf; pdftotext -q -nopgbrk "$<" - | (grep -v -e '^Délivré à' -e '^$$' || test $$? = 1) > "$@"
+
+clean:; rm *.txt
+.PHONY: clean

@@ -51,19 +51,15 @@ $~: txts | $~ned; @$($@)
 
 pdfs := $(wildcard *.pdf)
 
-ifdef NEVER
-txts := $(pdfs:%.pdf=%.txt)
-txts: $(txts)
-.PHONY: txt
-
-%.txt: %.pdf; pdftotext -q -nopgbrk "$<" - | (grep -v -e '^Délivré à' -e '^$$' || test $$? = 1) > "$@"
-endif
-
 ~ := txt
 $~.pat := .$~/%.txt
 $~.dir := $(dir $($~.pat))
 $~s := $(pdfs:%.pdf=$($~.pat))
-$($~.pat): cmd = pdftotext -q -nopgbrk "$<" - | (grep -v -e '^Délivré à' -e '^$$' || test $$? = 1) > "$@"
+$($~.pat): elist := ^Délivré à
+$($~.pat): elist += french-bookys.org$$
+$($~.pat): elist += ^$$
+$($~.pat): exclude = $(elist:%=-e '%')
+$($~.pat): cmd = pdftotext -q -nopgbrk "$<" - | (grep -v $(exclude) || test $$? = 1) > "$@"
 $($~.pat): %.pdf | $($~.dir); $(cmd)
 $($~.dir):; mkdir $@
 $~s: $($~s)

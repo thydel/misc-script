@@ -41,19 +41,44 @@ $~: pattern := "\\.txt$$"
 $~: select := select(.size == 0 and (.filename | test($(pattern)))).filename
 $~: do = if length > 0 then $1 else empty end
 $~: move = map($(select) | sub("txt"; "pdf")) | $(call do, "mv -t $| \(. | @sh)")
-$~: clean := map($(select)) | $(call do, "rm \(. | @sh)")
-$~: files := jc ls -l
+$~: clean := map($(select)) | map(".txt/" + .) | $(call do, "rm \(. | @sh)")
+$~: files := jc ls -l .txt
 $~: $~  = $(files) | jq -r '$(move)';
 $~: $~ += $(files) | jq -r '$(clean)'
 $~: txts | $~ned; @$($@)
 .PHONY: $~
 
+
 pdfs := $(wildcard *.pdf)
+
+ifdef NEVER
 txts := $(pdfs:%.pdf=%.txt)
 txts: $(txts)
 .PHONY: txt
 
 %.txt: %.pdf; pdftotext -q -nopgbrk "$<" - | (grep -v -e '^Délivré à' -e '^$$' || test $$? = 1) > "$@"
+endif
+
+~ := txt
+$~.pat := .$~/%.txt
+$~.dir := $(dir $($~.pat))
+$~s := $(pdfs:%.pdf=$($~.pat))
+$($~.pat): cmd = pdftotext -q -nopgbrk "$<" - | (grep -v -e '^Délivré à' -e '^$$' || test $$? = 1) > "$@"
+$($~.pat): %.pdf | $($~.dir); $(cmd)
+$($~.dir):; mkdir $@
+$~s: $($~s)
+.PHONY: $~s
+
+~ := pdfinfo
+$~.pat := .$~/%.json
+$~.dir := $(dir $($~.pat))
+$~s := $(pdfs:%.pdf=$($~.pat))
+$($~.pat): jq = [inputs] | map(split(": +";"g") | { (.[0]): .[1] }) | add | . + { Filename: "$<"}
+$($~.pat): cmd = $~ -isodates "$<" 2> /dev/null | jq -Rn '$(jq)' > "$@"
+$($~.pat): %.pdf | $($~.dir); $(cmd)
+$($~.dir):; mkdir $@
+$~s: $($~s)
+.PHONY: $~s
 
 clean:; rm *.txt
 .PHONY: clean

@@ -6,7 +6,7 @@ SHELL != which bash
 
 top:; @date
 
-pattern.presse := "@PresseFr"
+patterns.rename := [ "@PresseFr", "_UserUpload_Net" ]
 jq.files := .[] | .filename
 jq.mv := "mv \(@sh)"
 ascii.space := " "
@@ -30,8 +30,8 @@ $~: $-;
 .PHONY: $~
 
 ~ := rename
-$~: pattern := $(pattern.presse)
-$~: jq := $(jq.files) | select(test($(pattern))) | [., sub($(pattern); "")] | $(jq.mv)
+$~: patterns := $(patterns.rename)
+$~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p | $$i | select(test($$p)) | [$$i, sub($$p; "")] | $(jq.mv)
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 
@@ -57,6 +57,7 @@ $~.dir := $(dir $($~.pat))
 $~s := $(pdfs:%.pdf=$($~.pat))
 $($~.pat): elist := ^Délivré à
 $($~.pat): elist += french-bookys.org$$
+$($~.pat): elist += ^Powered by TCPDF
 $($~.pat): elist += ^$$
 $($~.pat): exclude = $(elist:%=-e '%')
 $($~.pat): cmd = pdftotext -q -nopgbrk "$<" - | (grep -v $(exclude) || test $$? = 1) > "$@"

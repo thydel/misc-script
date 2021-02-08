@@ -6,7 +6,7 @@ SHELL != which bash
 
 top:; @date
 
-patterns.rename := [ "@PresseFr", "_UserUpload_Net" ]
+patterns.rename := [ "@PresseFr", "_UserUpload_Net", "_-Unlocked" ]
 jq.files := .[] | .filename
 jq.mv := "mv \(@sh)"
 ascii.space := " "
@@ -70,12 +70,26 @@ $~s: $($~s)
 $~.pat := .$~/%.json
 $~.dir := $(dir $($~.pat))
 $~s := $(pdfs:%.pdf=$($~.pat))
+$($~.pat): self := $~
 $($~.pat): jq = [inputs] | map(split(": +";"g") | { (.[0]): .[1] }) | add | . + { Filename: "$<"}
-$($~.pat): cmd = $~ -isodates "$<" 2> /dev/null | jq -Rn '$(jq)' > "$@"
+$($~.pat): cmd = $(self) -isodates "$<" 2> /dev/null | jq -Rn '$(jq)' > "$@"
 $($~.pat): %.pdf | $($~.dir); $(cmd)
 $($~.dir):; mkdir $@
 $~s: $($~s)
 .PHONY: $~s
+
+~ := date
+$~.pat := .$~/%.date
+$~.dep := .pdfinfo/%.json
+$~.dir := $(dir $($~.pat))
+$~s := $(pdfs:%.pdf=$($~.pat))
+$($~.pat): cmd = jq .CreationDate $< | xargs -i echo touch -d '"{}"' $@
+$($~.pat): $($~.dep) | $($~.dir); @$(cmd)
+$($~.dir):; @mkdir $@
+$~s: $($~s)
+.PHONY: $~s
+
+pdfdates: $(pdfs); @echo $^ | xargs basename -a -s .pdf | xargs -i echo touch -r .date/{}.date {}.pdf
 
 clean:; rm *.txt
 .PHONY: clean

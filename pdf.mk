@@ -71,13 +71,24 @@ $~.pat := .$~/%.json
 $~.dir := $(dir $($~.pat))
 $~s := $(pdfs:%.pdf=$($~.pat))
 $($~.pat): self := $~
-$($~.pat): jq = [inputs] | map(split(": +";"g") | { (.[0]): .[1] }) | add | . + { Filename: "$<"}
-$($~.pat): cmd = $(self) -isodates "$<" 2> /dev/null | jq -Rn '$(jq)' > "$@"
+$($~.pat): jq := [inputs] | map(split(": +";"g") | { (.[0]): .[1] }) | add
+$($~.pat): cmd  = ($(self) -isodates "$<" 2> /dev/null;
+$($~.pat): cmd +=  echo -n 'FileDate:  '; date  +"%Y-%m-%dT%H:%M:%S%z" -r "$<";
+$($~.pat): cmd +=  echo 'FileName:  ' "$<") |
+$($~.pat): cmd += jq -Rn '$(jq)' > "$@"
 $($~.pat): %.pdf | $($~.dir); $(cmd)
 $($~.dir):; mkdir $@
 $~s: $($~s)
 .PHONY: $~s
 
+~ := redate
+$~: jq := . + { AnyDate: (.ModDate // .CreationDate // .FileDate) }
+$~: jq += | select(.AnyDate | sub("[+][0-9]+"; "Z") | fromdate | strftime("%Y-%m-%d") != "1999-12-31")
+$~: jq += | "touch -d \(.AnyDate) \"\(.FileName)\""
+$~: pdfinfos; @ls .pdfinfo/*.json | xargs -i jq -r '$(jq)' {}
+.PHONY: $~
+
+ifdef NEVER
 ~ := date
 $~.pat := .$~/%.date
 $~.dep := .pdfinfo/%.json
@@ -90,6 +101,7 @@ $~s: $($~s)
 .PHONY: $~s
 
 pdfdates: $(pdfs); @echo $^ | xargs basename -a -s .pdf | xargs -i echo touch -r .date/{}.date {}.pdf
+endif
 
 clean:; rm *.txt
 .PHONY: clean

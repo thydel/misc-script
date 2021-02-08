@@ -82,8 +82,9 @@ $~s: $($~s)
 .PHONY: $~s
 
 ~ := redate
+$~: scan := "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
 $~: jq := . + { AnyDate: (.ModDate // .CreationDate // .FileDate) }
-$~: jq += | select(.AnyDate | sub("[+][0-9]+"; "Z") | fromdate | strftime("%Y-%m-%d") != "1999-12-31")
+$~: jq += | select(.AnyDate | scan($(scan)) + "Z" | fromdate | strftime("%Y-%m-%d") != "1999-12-31")
 $~: jq += | "touch -d \(.AnyDate) \"\(.FileName)\""
 $~: pdfinfos; @ls .pdfinfo/*.json | xargs -i jq -r '$(jq)' {}
 .PHONY: $~

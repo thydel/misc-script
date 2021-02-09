@@ -86,8 +86,14 @@ $~: scan := "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
 $~: jq := . + { AnyDate: (.ModDate // .CreationDate // .FileDate) }
 $~: jq += | select(.AnyDate | scan($(scan)) + "Z" | fromdate | strftime("%Y-%m-%d") != "1999-12-31")
 $~: jq += | "touch -d \(.AnyDate) \"\(.FileName)\""
-$~: pdfinfos; @ls .pdfinfo/*.json | xargs -i jq -r '$(jq)' {}
+$~: $~  = find $(dir $|) -name '*.json' -newer $| | xargs -i jq -r '$(jq)' {};
+#$~: $~ += touch $|
+$~: pdfinfos | .pdfinfo/.stone; @$($@)
 .PHONY: $~
+
+.pdfinfo/.stone:; @touch -d '1 days ago' $@
+stone: .pdfinfo/.stone; touch $<
+.PHONY: stone
 
 ifdef NEVER
 ~ := date

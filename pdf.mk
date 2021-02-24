@@ -95,6 +95,14 @@ $~: pdfinfos | .pdfinfo/.stone; @$($@)
 stone: .pdfinfo/.stone; touch $<
 .PHONY: stone
 
+~ := creator/%
+$~: jq = select(.Creator // empty | test("$*"; "i")).FileName
+$~: $~  = mkdir -p $*;
+$~: $~ += move () { mv $$1.pdf $*; rm .pdfinfo/$$1.json; }; export -f move;
+$~: $~ += cat .pdfinfo/*.json | jq -r '$(jq)' |
+$~: $~ += xargs -r basename -s .pdf | xargs -ri echo move {} | $(DO)
+$~: pdfinfos; @$($~)
+
 ifdef NEVER
 ~ := date
 $~.pat := .$~/%.date
@@ -112,3 +120,10 @@ endif
 
 clean:; rm *.txt
 .PHONY: clean
+
+DO := cat
+do := DO := bash
+
+vartar := do
+
+$(vartar):; @: $(eval $($@))

@@ -22,7 +22,7 @@ $(if $(and $(dirs), $(rem)),, $(error needs dirs and rem))
 syncs := $(dirs:%=%.sync)
 
 ~ := $(syncs)
-$~: cpal = cp -al $* $*.cpal
+$~: cpal = proot -w $* cp -al . ../$*.cpal
 $~: . = ssh $(rem) proot -w $(pwd) $(cpal);
 $~: . += $(cpal);
 $~: . += rsync -avzH $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)

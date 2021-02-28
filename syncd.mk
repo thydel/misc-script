@@ -17,7 +17,7 @@ $(self):;
 
 pwd != pwd
 
-include .syncd.mk
+-include .syncd.mk
 $(if $(and $(dirs), $(rem)),, $(error needs dirs and rem))
 syncs := $(dirs:%=%.sync)
 cleans := $(dirs:%=%.clean)

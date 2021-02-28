@@ -86,7 +86,7 @@ $~: scan := "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
 $~: jq := . + { AnyDate: (.ModDate // .CreationDate // .FileDate) }
 $~: jq += | select(.AnyDate | scan($(scan)) + "Z" | fromdate | strftime("%Y-%m-%d") != "1999-12-31")
 $~: jq += | "touch -d \(.AnyDate) \"\(.FileName)\""
-$~: $~  = find $(dir $|) -name '*.json' -newer $| -print0 | xargs -0i jq -r '$(jq)' {};
+$~: $~  = find $(dir $|) -name '*.json' -newer $| -print0 | xargs -0i jq -r '$(jq)' {} | sort -k 3,3r;
 #$~: $~ += touch $|
 $~: pdfinfos | .pdfinfo/.stone; @$($@)
 .PHONY: $~

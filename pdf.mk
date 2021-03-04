@@ -6,13 +6,26 @@ SHELL != which bash
 
 top:; @date
 
+-include .pdf.mk
+conf.mvs ?= { dummy: [] }
+
 patterns.rename := [ "@PresseFr", "_UserUpload_Net", "_-Unlocked" ]
 jq.files := .[] | .filename
+jq.pdfs := $(jq.files) | select(test("[.]pdf$$"))
 jq.mv := "mv \(@sh)"
 ascii.space := " "
 ascii.quote := "\u0027"
 unicode.nbsp := "\u00a0"
 unicode.rsquo := "\u2019"
+
+~ := mv
+$~: mvs := $(conf.mvs)
+$~: jq  = $(mvs) as $$m
+$~: jq += | ( $$m | keys[] as $$d | [ "mkdir", "-p", $$d ] | "\(@sh)")
+$~: jq += , ( $(jq.pdfs) | . as $$f | $$m | keys[] as $$d | $$m[$$d][] as $$p | $$f | select(test($$p))
+$~: jq +=     | [[ "mv", $$f, $$d ], [ "rm", ".pdfinfo/" + ($$f | sub("pdf"; "json")) ]][] | "\(@sh)")
+$~:; @jc ls | jq -r '$(jq)'
+.PHONY: $~
 
 ~ := no-space
 $~: from := $(ascii.space)

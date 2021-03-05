@@ -24,7 +24,7 @@ cleans := $(dirs:%=%.clean)
 sts :=
 
 ~ := $(syncs)
-$~: cpal = proot -w $* cp -al . ../$*.cpal
+$~: cpal = proot -w $* cp -alf . ../$*.cpal
 $~: . = ssh $(rem) proot -w $(pwd) $(cpal);
 $~: . += $(cpal);
 $~: . += rsync -avzH $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)

@@ -105,7 +105,7 @@ $~: pdfinfos | .pdfinfo/.stone; @$($@)
 .PHONY: $~
 
 .pdfinfo/.stone:; @touch -d '1 days ago' $@
-stone: .pdfinfo/.stone; touch $<
+stone: .pdfinfo/.stone; @touch $<
 .PHONY: stone
 
 ~ := creator/%

@@ -116,6 +116,14 @@ $~: $~ += cat .pdfinfo/*.json | jq -r '$(jq)' |
 $~: $~ += xargs -r basename -s .pdf | xargs -ri echo move {} | $(DO)
 $~: pdfinfos; @$($~)
 
+~ := dirdate
+$~: d := $${1:?}
+$~: $~ := f () { touch -r "$d/$$(ls -t $d | head -1)" "$d"; };
+$~: $~ += find -mindepth 1 -maxdepth 1 -type d
+$~: $~ += | { declare -f f; xargs -i echo f {}; } | bash
+$~:; $($@)
+.PHONY: $~
+
 ifdef NEVER
 ~ := date
 $~.pat := .$~/%.date

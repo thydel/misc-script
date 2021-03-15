@@ -27,6 +27,18 @@ $~: jq +=     | [[ "mv", $$f, $$d ], [ "rm", ".pdfinfo/" + ($$f | sub("pdf"; "js
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 
+# Propagate date of most recent file to dir
+~ := pdate
+$~: func = $1 () { $($(strip $1)); };
+$~: funcs = $(strip $(foreach _, $1, $(call func, $_)))
+$~: map := while read; do "$$@" $$REPLY; done
+$~: dirs := find -mindepth 1 -maxdepth 1 -type d
+$~: file := ls -t $${1:?} | sed -n 1p | xargs -i touch -r "$$1/{}" "$$1"
+$~: $~ := $(call funcs, map dirs file)
+$~: $~ += dirs | map file
+$~:; @$($@)
+.PHONY: $~
+
 ~ := no-space
 $~: from := $(ascii.space)
 $~: to := $(unicode.nbsp)
@@ -44,7 +56,7 @@ $~: $-;
 
 ~ := rename
 $~: patterns := $(patterns.rename)
-$~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p | $$i | select(test($$p)) | [$$i, sub($$p; "")] | $(jq.mv)
+$~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p | $$i | select(test($$p; "i")) | [$$i, sub($$p; "")] | $(jq.mv)
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 

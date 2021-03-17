@@ -123,13 +123,22 @@ $~: pdfinfos | .pdfinfo/.stone; @$($@)
 stone: .pdfinfo/.stone; @touch $<
 .PHONY: stone
 
+# Remove all .pdfinfo/%.json without a matching %.pdf
+pdfinfos := $(wildcard .pdfinfo/*.json)
+~ := pdfinfos.clean
+$~ := $(pdfinfos:%=%.clean)
+$($~): .pdfinfo/%.json.clean : .pdfinfo/%.json; @test -f "$*.pdf" || echo rm '"$<"'
+$~: $($~)
+.PHONY: $~
+
+# Move all pdf whose Creator field match creator/% in % dir
 ~ := creator/%
 $~: jq = select(.Creator // empty | test("$*"; "i")).FileName
 $~: $~  = mkdir -p $*;
 $~: $~ += move () { mv $$1.pdf $*; rm .pdfinfo/$$1.json; }; export -f move;
 $~: $~ += cat .pdfinfo/*.json | jq -r '$(jq)' |
-$~: $~ += xargs -r basename -s .pdf | xargs -ri echo move {} | $(DO)
-$~: pdfinfos; @$($~)
+$~: $~ += xargs -r basename -s .pdf | xargs -ri echo move {} $* | $(DO)
+$~: pdfinfos; @$($(@D)/%)
 
 ~ := dirdate
 $~: d := $${1:?}

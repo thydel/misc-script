@@ -4,6 +4,9 @@ MAKEFLAGS += -Rr --warn-undefined-variables
 SHELL != which bash
 .SHELLFLAGS := -euo pipefail -c
 
+.ONESHELL:
+.DELETE_ON_ERROR:
+
 top:; @date
 
 -include .pdf.mk

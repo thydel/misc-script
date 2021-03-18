@@ -43,7 +43,7 @@ DEL :=
 run := DRY :=
 del := DEL := --delete
 
-vartar := run del
+vartar += run del
 
 $(vartar):; @: $(eval $($@))
 

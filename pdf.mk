@@ -9,6 +9,8 @@ SHELL != which bash
 
 top:; @date
 
+vartar :=
+
 -include .pdf.mk
 conf.mvs ?= { dummy: [] }
 
@@ -110,12 +112,20 @@ $~s: $($~s)
 .PHONY: $~s
 
 ~ := redate
+ifeq ($(filter $~, $(MAKECMDGOALS)),$~)
+order := MC
+creation := order := CM
+vartar += creation
+endif
 $~: scan := "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}"
-$~: jq := . + { AnyDate: (.ModDate // .CreationDate // .FileDate) }
+$~: c := .CreationDate
+$~: m := .ModDate
+$~: MC := $m // $c
+$~: CM := $c // $m
+$~: jq  = . + { AnyDate: ($($(order)) // .FileDate) }
 $~: jq += | select(.AnyDate | scan($(scan)) + "Z" | fromdate | strftime("%Y-%m-%d") != "1999-12-31")
 $~: jq += | "touch -d \(.AnyDate) \"\(.FileName)\""
 $~: $~  = find $(dir $|) -name '*.json' -newer $| -print0 | xargs -0i jq -r '$(jq)' {} | sort -k 3,3r;
-#$~: $~ += touch $|
 $~: pdfinfos | .pdfinfo/.stone; @$($@)
 .PHONY: $~
 
@@ -169,6 +179,6 @@ clean:; rm *.txt
 DO := cat
 do := DO := bash
 
-vartar := do
+vartar += do
 
 $(vartar):; @: $(eval $($@))

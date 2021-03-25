@@ -13,8 +13,10 @@ vartar :=
 
 -include .pdf.mk
 conf.mvs ?= { dummy: [] }
+conf.rename ?= []
+conf.not-txt ?= dummy
 
-patterns.rename := [ "@PresseFr", "_UserUpload_Net", "_-Unlocked" ]
+patterns.rename := $(conf.rename)
 jq.files := .[] | .filename
 jq.pdfs := $(jq.files) | select(test("[.]pdf$$"))
 jq.mv := "mv \(@sh)"
@@ -78,17 +80,13 @@ $~: $~ += $(files) | jq -r '$(clean)'
 $~: txts | $~ned; @$($@)
 .PHONY: $~
 
-
 pdfs := $(wildcard *.pdf)
 
 ~ := txt
 $~.pat := .$~/%.txt
 $~.dir := $(dir $($~.pat))
 $~s := $(pdfs:%.pdf=$($~.pat))
-$($~.pat): elist := ^Délivré à
-$($~.pat): elist += french-bookys.org$$
-$($~.pat): elist += ^Powered by TCPDF
-$($~.pat): elist += ^$$
+$($~.pat): elist := $(conf.not-txt)
 $($~.pat): exclude = $(elist:%=-e '%')
 $($~.pat): cmd = pdftotext -q -nopgbrk "$<" - | (grep -v $(exclude) || test $$? = 1) > "$@"
 $($~.pat): %.pdf | $($~.dir); $(cmd)
@@ -157,21 +155,6 @@ $~: $~ += find -mindepth 1 -maxdepth 1 -type d
 $~: $~ += | { declare -f f; xargs -i echo f {}; } | bash
 $~:; $($@)
 .PHONY: $~
-
-ifdef NEVER
-~ := date
-$~.pat := .$~/%.date
-$~.dep := .pdfinfo/%.json
-$~.dir := $(dir $($~.pat))
-$~s := $(pdfs:%.pdf=$($~.pat))
-$($~.pat): cmd = jq .CreationDate $< | xargs -i echo touch -d '"{}"' $@
-$($~.pat): $($~.dep) | $($~.dir); @$(cmd)
-$($~.dir):; @mkdir $@
-$~s: $($~s)
-.PHONY: $~s
-
-pdfdates: $(pdfs); @echo $^ | xargs basename -a -s .pdf | xargs -i echo touch -r .date/{}.date {}.pdf
-endif
 
 clean:; rm *.txt
 .PHONY: clean

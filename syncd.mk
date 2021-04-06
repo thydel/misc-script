@@ -27,7 +27,7 @@ sts :=
 $~: cpal = proot -w $* cp -alf . ../$*.cpal
 $~: . = ssh $(rem) proot -w $(pwd) $(cpal);
 $~: . += $(cpal);
-$~: . += rsync -avzH $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)
+$~: . += rsync -avzH $(BWL) $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)
 $~: %.sync: phony; $(strip $.)
 sts += sync
 
@@ -43,7 +43,10 @@ DEL :=
 run := DRY :=
 del := DEL := --delete
 
-vartar += run del
+BWL :=
+bwl := BWL := --bwlimit=500k
+
+vartar += run del bwl
 
 $(vartar):; @: $(eval $($@))
 

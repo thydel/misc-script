@@ -153,7 +153,7 @@ $~: d := $${1:?}
 $~: $~ := f () { touch -r "$d/$$(ls -t $d | head -1)" "$d"; };
 $~: $~ += find -mindepth 1 -maxdepth 1 -type d
 $~: $~ += | { declare -f f; xargs -i echo f {}; } | bash
-$~:; $($@)
+$~:; @$($@)
 .PHONY: $~
 
 clean:; rm *.txt

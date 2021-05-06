@@ -18,7 +18,7 @@ pdfs  := $(epubs:%.epub=%.pdf)
 _  :=
 __ := $_ $_
 <_  = $(subst ?,$(__),$<)
-@_  = $(subst ?,$(__),$@)
+@_  = $(subst \,,$(subst ?,$(__),$@))
 
 nice := nice -n 19 ionice -c 3
 

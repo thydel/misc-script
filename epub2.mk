@@ -11,7 +11,7 @@ SHELL != which bash
 self := $(lastword $(MAKEFILE_LIST))
 $(self):;
 
-epubs := $(shell find -name '*.epub' | sort | tr ' ' \?)
+epubs := $(shell find -name '*.epub' | sort | tr ' ' \? | sed -e 's/[()[]/\\&/g')
 mobis := $(epubs:%.epub=%.mobi)
 pdfs  := $(epubs:%.epub=%.pdf)
 

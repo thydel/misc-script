@@ -63,7 +63,7 @@ $~: $-;
 
 ~ := rename
 $~: patterns := $(patterns.rename)
-$~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p | $$i | select(test($$p; "i")) | [$$i, sub($$p; "")] | $(jq.mv)
+$~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p | $$i | select(test($$p; "i")) | [$$i, sub($$p; ""; "i")] | $(jq.mv)
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 

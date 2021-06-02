@@ -14,9 +14,11 @@ vartar :=
 -include .pdf.mk
 conf.mvs ?= { dummy: [] }
 conf.rename ?= []
+conf.rename2 ?= []
 conf.not-txt ?= dummy
 
 patterns.rename := $(conf.rename)
+patterns.rename2 := $(conf.rename2)
 jq.files := .[] | .filename
 jq.pdfs := $(jq.files) | select(test("[.]pdf$$"))
 jq.mv := "mv \(@sh)"
@@ -64,6 +66,14 @@ $~: $-;
 ~ := rename
 $~: patterns := $(patterns.rename)
 $~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p | $$i | select(test($$p; "i")) | [$$i, sub($$p; "")] | $(jq.mv)
+$~:; @jc ls | jq -r '$(jq)'
+.PHONY: $~
+
+~ := rename2
+$~: patterns := $(patterns.rename2)
+$~: jq := $(jq.files) | . as $$i | $(patterns)[] as $$p
+$~: jq += | $$p | .[0] as $$f | .[1] as $$t
+$~: jq += | $$i | select(test($$f; "i")) | [$$i, sub($$f; $$t)] | $(jq.mv)
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 

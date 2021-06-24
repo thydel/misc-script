@@ -149,9 +149,11 @@ $($~): .pdfinfo/%.json.clean : .pdfinfo/%.json; @test -f "$*.pdf" || echo rm '"$
 $~: $($~)
 .PHONY: $~
 
+# mv -f fail when both files are linked
 show-dups:; @join <(ls -i *.pdf | sort -n) <(ls -i */*.pdf | grep -v ' spl/' | sort -n) | awk '{print$$2}'
 
 # Move all pdf whose Creator field match creator/% in % dir
+# pdf show-dups | xargs rm
 ~ := creator/%
 $~: jq = select(.Creator // empty | test("$*"; "i")).FileName
 $~: $~  = mkdir -p $*;

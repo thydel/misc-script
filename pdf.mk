@@ -54,7 +54,10 @@ $~: to := $(unicode.nbsp)
 ~ := no-quote
 $~: from := $(ascii.quote)
 $~: to := $(unicode.rsquo)
-~ := no-space no-quote
+~ := lcase-suffix
+$~: from := "PDF$$"
+$~: to := "pdf"
+~ := no-space no-quote lcase-suffix
 $~: jq := $(jq.files) | select(test($(from))) | [., sub($(from); $(to); "g")] | $(jq.mv)
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~

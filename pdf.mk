@@ -22,6 +22,7 @@ patterns.rename2 := $(conf.rename2)
 jq.files := .[] | .filename
 jq.pdfs := $(jq.files) | select(test("[.]pdf$$"))
 jq.mv := "mv \(@sh)"
+char.comma := ,
 ascii.space := " "
 ascii.quote := "\u0027"
 unicode.nbsp := "\u00a0"
@@ -32,7 +33,7 @@ $~: mvs := $(conf.mvs)
 $~: jq  = $(mvs) as $$m
 $~: jq += | ( $$m | keys[] as $$d | [ "mkdir", "-p", $$d ] | "\(@sh)")
 $~: jq += , ( $(jq.pdfs) | . as $$f | $$m | keys[] as $$d | $$m[$$d][] as $$p | $$f | select(test($$p; "i"))
-$~: jq +=     | [[ "mv", $$f, $$d ], [ "rm", "-f", ".pdfinfo/" + ($$f | sub("pdf"; "json")) ]][] | "\(@sh)")
+$~: jq +=     | [[ "mv", $(if $(FORCE),"-f"$(char.comma),) $$f, $$d ], [ "rm", "-f", ".pdfinfo/" + ($$f | sub("pdf"; "json")) ]][] | "\(@sh)")
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 
@@ -178,7 +179,9 @@ clean:; rm *.txt
 
 DO := cat
 do := DO := bash
+FORCE :=
+force := FORCE := -f
 
-vartar += do
+vartar += do force
 
 $(vartar):; @: $(eval $($@))

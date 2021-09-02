@@ -33,7 +33,11 @@ $~: mvs := $(conf.mvs)
 $~: jq  = $(mvs) as $$m
 $~: jq += | ( $$m | keys[] as $$d | [ "mkdir", "-p", $$d ] | "\(@sh)")
 $~: jq += , ( $(jq.pdfs) | . as $$f | $$m | keys[] as $$d | $$m[$$d][] as $$p | $$f | select(test($$p; "i"))
-$~: jq +=     | [[ "mv", $(if $(FORCE),"-f"$(char.comma),) $$f, $$d ], [ "rm", "-f", ".pdfinfo/" + ($$f | sub("pdf"; "json")) ]][] | "\(@sh)")
+$~: jq +=     | [
+$~: jq +=        [ $(if $(FORCE),"eval",":"), "rm", $$d + "/" + $$f ],
+$~: jq +=        [ "mv", $$f, $$d ],
+$~: jq +=        [ "rm", "-f", ".pdfinfo/" + ($$f | sub("pdf"; "json")) ]
+$~: jq +=       ][] | "\(@sh)")
 $~:; @jc ls | jq -r '$(jq)'
 .PHONY: $~
 

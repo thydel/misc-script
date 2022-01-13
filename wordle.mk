@@ -20,3 +20,7 @@ $(dir)/five-unique-letters: $(dir)/five-letters; < $< grep -Ev '(.).*\1' > $@
 first: $(dir)/five-unique-letters phony; < $< shuf -n1
 look: $(dir)/five-letters phony; < $< grep $g | grep -v [$e]
 main: phony $(dir)/five-unique-letters
+
+# Local Variables:
+# indent-tabs-mode: nil
+# End:

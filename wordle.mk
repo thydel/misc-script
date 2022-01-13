@@ -16,7 +16,7 @@ dict := /usr/share/dict/american-english
 dir := tmp/wordle
 $(dir):; mkdir -p $@
 $(dir)/five-letters: $(dict) | $(dir); < $< sed -e "s/'s$$//" | grep '^.....$$' | tr '[:upper:]' '[:lower:]' | sort -u > $@
-$(dir)/five-unique-letters: $(dir)/five-letters; < $< grep -v '\(.\).*\1' > $@
+$(dir)/five-unique-letters: $(dir)/five-letters; < $< grep -Ev '(.).*\1' > $@
 first: $(dir)/five-unique-letters phony; < $< shuf -n1
 look: $(dir)/five-letters phony; < $< grep $g | grep -v [$e]
 main: phony $(dir)/five-unique-letters

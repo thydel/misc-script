@@ -149,6 +149,7 @@ $~: pdfinfos | .pdfinfo/.stone; @$($@)
 stone: .pdfinfo/.stone; @touch $<
 .PHONY: stone
 
+ifdef clean
 # Remove all .pdfinfo/%.json without a matching %.pdf
 pdfinfos := $(wildcard .pdfinfo/*.json)
 ~ := pdfinfos.clean
@@ -156,6 +157,7 @@ $~ := $(pdfinfos:%=%.clean)
 $($~): .pdfinfo/%.json.clean : .pdfinfo/%.json; @test -f "$*.pdf" || echo rm '"$<"'
 $~: $($~)
 .PHONY: $~
+endif
 
 # mv -f fail when both files are linked
 show-dups:; @join <(ls -i *.pdf | sort) <(ls -i */*.pdf | grep -v ' spl/' | sort) | awk '{print$$2}'

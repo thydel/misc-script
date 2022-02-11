@@ -21,13 +21,14 @@ pwd != pwd
 $(if $(and $(dirs), $(rem)),, $(error needs dirs and rem))
 syncs := $(dirs:%=%.sync)
 cleans := $(dirs:%=%.clean)
+rdfinds := $(dirs:%=%.rdfind)
 sts :=
 
 ~ := $(syncs)
 $~: cpal = proot -w $* cp -alf . ../$*.cpal
 $~: . = ssh $(rem) proot -w $(pwd) $(cpal);
 $~: . += $(cpal);
-$~: . += rsync -avzH $(BWL) $(ZIP) $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)
+$~: . += rsync -avH $(BWL) $(ZIP) $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)
 $~: %.sync: phony; $(strip $.)
 sts += sync
 
@@ -36,6 +37,11 @@ $~: .  = find $*.cpal -maxdepth 1 -type f -links +2 |
 $~: . += xargs -r echo rm
 $~: %.clean: phony; @$(strip $.)
 sts += clean
+
+~ := $(rdfinds)
+$~: . = rdfind -makehardlinks true $*
+$~: %.rdfind: phony; @$(strip $.)
+sts += rdfind
 
 DRY := -n
 DEL :=
@@ -56,5 +62,5 @@ $(vartar):; @: $(eval $($@))
 
 seq = {$(subst $(_WS),$(_comma),$(strip $1))}
 
-help: phony; echo [$(call seq, $(vartar))] $(call seq, $(dirs)).$(call seq, $(sts))
+help: phony; @echo [$(call seq, $(vartar))] $(call seq, $(dirs)).$(call seq, $(sts))
 main: phony help

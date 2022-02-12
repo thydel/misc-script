@@ -47,7 +47,7 @@ $~: func = $1 () { $($(strip $1)); };
 $~: funcs = $(strip $(foreach _, $1, $(call func, $_)))
 $~: map := while read; do "$$@" $$REPLY; done
 $~: dirs := find -mindepth 1 -maxdepth 1 -type d
-$~: file := ls -t $${1:?} | sed -n 1p | xargs -i touch -r "$$1/{}" "$$1"
+$~: file := ls -t $${1:?} | sed -n 1p | tr '\n' '\0' | xargs -0i touch -r "$$1/{}" "$$1"
 $~: $~ := $(call funcs, map dirs file)
 $~: $~ += dirs | map file
 $~:; @$($@)

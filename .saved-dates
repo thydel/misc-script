@@ -1,6 +1,5 @@
+1644591748 wordle.mk
 1642784227 syncd.mk
-1642784227 pdf.mk
-1642410823 wordle.mk
 1642072379 wordle.md
 1634731540 get-all-epi-repos.mk
 1622796028 install-qpdf.mk
@@ -11,6 +10,7 @@
 1614529139 syncd.mk.install
 1614529110 pdf.mk.install
 1614524060 wmx.mk
+1612795129 pdf.mk
 1612105170 pdf.jsonnet
 1611544986 rfunc.mk
 1580556208 reset-prop-date.sh.install

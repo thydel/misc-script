@@ -12,7 +12,10 @@ SHELL != which bash
 self := $(lastword $(MAKEFILE_LIST))
 $(self):;
 
-dict := /usr/share/dict/american-english
+dict1 := /usr/share/dict/american-english
+dict2 := wordle.dict
+dict := $(dict1)
+diff:; -diff <(sort $(dict1)) <(sort $(dict2)) | wc -l
 dir := tmp/wordle
 $(dir):; mkdir -p $@
 $(dir)/five-letters: $(dict) | $(dir); < $< sed -e "s/'s$$//" | grep '^.....$$' | tr '[:upper:]' '[:lower:]' | sort -u > $@

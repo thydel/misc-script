@@ -10,4 +10,5 @@ main: $($t)
 %.txt: %.pdf; pdftotext "$<"
 %.lst: %.pdf; pdfimages -list "$<" > "$@"
 convert = convert "$<" "$@"
-%.png: %.jpg; $(convert)
+%.jpg: %.png; $(convert)
+%.jpg: %.tif; $(convert)

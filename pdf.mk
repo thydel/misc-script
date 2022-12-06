@@ -191,7 +191,7 @@ $~: cmd += | xargs -r0 mv -t $(first)
 $~:; $(cmd)
 
 ~ := %.pdf
-$~: cmd  = mkdir tmp;
+$~: cmd  = rm -r tmp; mkdir tmp;
 $~: cmd += pdfimages -all "$<" tmp/pdf;
 $~: cmd += mogrify -resize 75% -quality 75 tmp/*.jpg;
 $~: uniq := md5sum tmp/*.jpg | sort | uniq -w 32 | awk '{ print $$2 }' | sort

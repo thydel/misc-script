@@ -28,7 +28,7 @@ sts :=
 $~: cpal = proot -w $* cp -alf . ../$*.cpal
 $~: . = ssh $(rem) proot -w $(pwd) $(cpal);
 $~: . += $(cpal);
-$~: . += rsync -avH $(BWL) $(ZIP) $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)
+$~: . += rsync -avH --no-inc-recursive $(BWL) $(ZIP) $(DRY) $(DEL) $*{,.cpal} $(rem):$(pwd)
 $~: %.sync: phony; $(strip $.)
 sts += sync
 

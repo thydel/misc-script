@@ -7,7 +7,7 @@ t ?= txt
 $f=$(wildcard *.$f)
 $t=$($f:%.$f=%.$t)
 main: $($t)
-%.txt: %.pdf; pdftotext $<
-%.lst: %.pdf; pdfimages -list $<
-convert = convert $< $@
+%.txt: %.pdf; pdftotext "$<"
+%.lst: %.pdf; pdfimages -list "$<" > "$@"
+convert = convert "$<" "$@"
 %.png: %.jpg; $(convert)

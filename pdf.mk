@@ -180,6 +180,38 @@ $~: $~ += | { declare -f f; xargs -i echo f {}; } | bash
 $~:; @$($@)
 .PHONY: $~
 
+~ := year/%
+$~: first = $*
+$~: last = $$(( $(first) + 1 ))
+$~: cmd += mkdir -p $(first);
+$~: cmd += touch -d $(first)-01-01 .first;
+$~: cmd += touch -d $(last)-01-01 .last;
+$~: cmd += find -mindepth 1 -maxdepth 1 -type f -name '*.pdf' -newer .first ! -newer .last -print0
+$~: cmd += | xargs -r0 mv -t $(first)
+$~:; $(cmd)
+
+~ := %.pdf
+$~: cmd  = mkdir tmp;
+$~: cmd += pdfimages -all "$<" tmp/pdf;
+$~: cmd += mogrify -resize 75% -quality 75 tmp/*.jpg;
+$~: uniq := md5sum tmp/*.jpg | sort | uniq -w 32 | awk '{ print $$2 }' | sort
+$~: cmd += img2pdf -o "$@" $$($(uniq));
+$~: cmd += rm -r tmp
+2compress.pat := 2compress/%.pdf
+$~: $(2compress.pat); $(cmd)
+2compress := $(sort $(wildcard 2compress/*.pdf))
+compressed := $(2compress:$(2compress.pat)=%.pdf)
+compress: $(compressed)
+.PHONY: compress
+
+~ := .list/%.txt
+$~: %.pdf | .list; pdfimages -list "$<" > "$@"
+2list := $(sort $(wildcard *.pdf))
+listed := $(2list:%.pdf=$~)
+.list:; mkdir $@
+list: $(listed)
+.PHONY: list
+
 clean:; rm *.txt
 .PHONY: clean
 

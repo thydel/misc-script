@@ -1,9 +1,16 @@
+1676678480 prop-date-lib.jq
+1676677661 prop-date-perl.jq.install
+1676677643 prop-date-perl.jq
+1676677071 prop-date-python.jq
+1676676676 prop-date-python.jq.install
+1676675536 prop-date-sh.jq
+1676674812 prop-date-sh.jq.install
 1676653821 pass
 1670338864 from-to.mk
 1670322331 from-to.mk.install
 1669205429 tools.sh
 1667844562 stats.sh
-1667844562 prop-date.jq
+1667844562 prop-date-v1.jq
 1644757712 wordle.mk
 1644757499 wordle.dict
 1644687119 mov.mk

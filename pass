@@ -1,4 +1,0 @@
-#!/bin/bash                                                                                                          
-
-f () { proot -w ~/.password-store find -type f | grep "$1" | sed 's/^..//;s/....$//'; }
-if [[ $# -eq 0 || ${1:?} != find ]]; then /usr/bin/pass "${@}"; else f ${2:?}; fi

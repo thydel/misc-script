@@ -23,7 +23,7 @@ twice generate new unique buffer name"
    ((or dired-directory buffer-file-name)
     (let*
 	((path (directory-file-name
-		 (or dired-directory (file-name-directory buffer-file-name))))
+		(expand-file-name (or dired-directory (file-name-directory buffer-file-name)))))
 	 (name (file-name-nondirectory path))
 	 (hash (concat (substring (md5 path) 0 4))))
       (concat "$" name ":" hash)))
